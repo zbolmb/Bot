@@ -1,54 +1,68 @@
 import java.awt.Robot;
 import java.awt.event.KeyEvent;
 import java.awt.AWTException;
-import java.awt.event.KeyListener;
 
 public class Bot{
-	Robot bot = new Robot();
-	long kishin_start = System.currentTimeMillis();
-	long haku_start = System.currentTimeMillis();
-	long end;
-	long kishin_timer;
-	long haku_timer;
-	int teleport = KeyEvent.VK_SPACE;
+	private Robot bot, holdBot;
+
+	int teleport = KeyEvent.VK_E;
 	int kishin = KeyEvent.VK_F1;
 	int booster = KeyEvent.VK_F2;
 	int haku = KeyEvent.VK_F3;
-	long kishin_duration = 150000;
-	long booster_duration = 240000;
-	long haku_duration = 600000;
+
+	long buff_duration = 60000;
 
 	public static void main(String[] args) throws AWTException {
 		new Bot();
 	}
 
 	public Bot() throws AWTException {
+		bot = new Robot();
+		bot.setAutoDelay(100);
+		holdBot = new Robot();
 		bot.delay(2000);
-		buff(kishin);
-		buff(haku);
 		System.out.println("Starting");
+		long start_timer = System.currentTimeMillis();
+		long buff_timer = System.currentTimeMillis();
+		long lastPrint = System.currentTimeMillis();
+		buff();
 		while(true) {
-			bot.delay(50);
-			end = System.currentTimeMillis();
-			kishin_timer = end - kishin_start;
-			haku_timer = end - haku_start;
+			if (System.currentTimeMillis() - start_timer > 7200000) {
+				System.exit(0);
+			}
+			if (System.currentTimeMillis() - lastPrint > 10000) {
+					lastPrint = System.currentTimeMillis();
+					long time = System.currentTimeMillis() - start_timer;
+					System.out.println(String.format("Running for %s minutes and %s seconds.", (time/1000/60), (time/1000)%60));
+				}
+			if (System.currentTimeMillis() - buff_timer > buff_duration) {
+				System.out.println("Buffing");
+				buff();
+				buff_timer = System.currentTimeMillis();
+			}
 			bot.keyPress(teleport);
-			if (kishin_timer >= kishin_duration) {
-				System.out.println("Kishin");
-				buff(kishin);
-				kishin_start = System.currentTimeMillis();
-			}
-
-			if (haku_timer >= haku_duration) {
-				System.out.println("Haku");
-				buff(haku);
-				haku_start = System.currentTimeMillis();
-			}
+			bot.keyRelease(teleport);
 		}
 	}
 
-	public void buff(int e) {
-		bot.delay(500);
-		bot.keyPress(e);
+	public void buff() {
+		long cur = System.currentTimeMillis();
+		while (System.currentTimeMillis() - cur < 500) {
+			holdBot.keyPress(kishin);
+		}
+		holdBot.keyRelease(kishin);
+		holdBot.delay(500);
+		cur = System.currentTimeMillis();
+		while (System.currentTimeMillis() - cur < 500) {
+			holdBot.keyPress(booster);
+		}
+		holdBot.keyRelease(booster);
+		holdBot.delay(500);
+		cur = System.currentTimeMillis();
+		while (System.currentTimeMillis() - cur < 500) {
+			holdBot.keyPress(haku);
+		}
+		holdBot.delay(500);
+		holdBot.keyRelease(haku);
 	}
 }
