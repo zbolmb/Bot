@@ -2,7 +2,7 @@ import java.awt.Robot;
 import java.awt.event.KeyEvent;
 import java.awt.AWTException;
 
-public class Kishin{
+public class kish{
 	Robot bot = new Robot();
 	boolean start = true;
 	long kishin_start = System.currentTimeMillis();
@@ -25,10 +25,10 @@ public class Kishin{
 	long haku_duration = 600000;
 
 	public static void main(String[] args) throws AWTException {
-		new Kishin();
+		new kish();
 	}
 
-	public Kishin() throws AWTException {
+	public kish() throws AWTException {
 		bot.delay(2000);
 		System.out.println("Starting");
 		while(true) {
