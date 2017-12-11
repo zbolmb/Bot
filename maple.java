@@ -34,20 +34,21 @@ public class maple extends Application {
 	*/
 
    private static final int TELEPORT_KEY = KeyEvent.VK_E;
+   private static final int DEMON_FURY_KEY = KeyEvent.VK_W;
    // Buffs are of form: name (just for printing), time between casts (in seconds), and key
    private static Buff[] BUFFS = {
       // Kishin lasts for 150 seconds and is the most important for rebuffs.
       new Buff("Kishin", 60, KeyEvent.VK_F1),
       // Domain has a 220s CD, but is very very important and does NOT spend mana
       // for failed attempts. So, try more often than is necessary.
-      new Buff("Domain", 40, KeyEvent.VK_F5),
+      // new Buff("Domain", 40, KeyEvent.VK_F5),
       // Booster lasts for 240 seconds, so as long as there are no consecutive failures,
       // booster should always be active.
       new Buff("Booster", 100, KeyEvent.VK_F3),
       // Yuki has a 90s CD, but it also does not spend mana for failed attempts.
-      new Buff("Yuki", 30, KeyEvent.VK_F4),
+      // new Buff("Yuki", 30, KeyEvent.VK_F4),
       // Sengoku Forces
-      new Buff("Sengoku", 30, KeyEvent.VK_F6),
+      // new Buff("Sengoku", 30, KeyEvent.VK_F6),
       // Haku has a 900s duration, but missing haku for 5 minutes could be deadly, so
       // try a bit more frequently.
       new Buff("Haku", 300, KeyEvent.VK_F2)
@@ -260,6 +261,8 @@ public class maple extends Application {
       // Teleport
       robot.keyPress(TELEPORT_KEY);
       robot.keyRelease(TELEPORT_KEY);
+      // robot.keyPress(DEMON_FURY_KEY);
+      // robot.keyRelease(DEMON_FURY_KEY);
    }
 
    private static void goToMiddle() {
