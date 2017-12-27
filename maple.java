@@ -44,7 +44,7 @@ public class maple extends Application {
       // new Buff("Domain", 40, KeyEvent.VK_F5),
       // Booster lasts for 240 seconds, so as long as there are no consecutive failures,
       // booster should always be active.
-      new Buff("Booster", 100, KeyEvent.VK_F3),
+      // new Buff("Booster", 100, KeyEvent.VK_F3),
       // Yuki has a 90s CD, but it also does not spend mana for failed attempts.
       // new Buff("Yuki", 30, KeyEvent.VK_F4),
       // Sengoku Forces
