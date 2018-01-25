@@ -105,7 +105,7 @@ public class maple extends Application {
          });
 
       leech_btn = new Button();
-      leech_btn.setText("Leech");
+      leech_btn.setText("Start Leech");
       leech_btn.setOnAction(
          new EventHandler<ActionEvent>() {
             @Override
@@ -256,9 +256,17 @@ public class maple extends Application {
       button.setText(pause ? "Unpause" : "Pause");
 
       Button leech_button = (Button) vbox.getChildren().get(BUFFS.length + 3);
-      leech_button.setText(leech ? "Start Leech" : "Stop Leech");
+      leech_button.setText(leech ? "Stop Leech" : "Start Leech");
 
-      vbox.setStyle(String.format("-fx-background-color: #%s;", pause ? "800000" : "008800"));
+      if (pause) {
+      	vbox.setStyle("-fx-background-color: #800000;");
+      } else if (leech) {
+      	vbox.setStyle("-fx-background-color: #FFFF00;");
+      } else {
+      	vbox.setStyle("-fx-background-color: #008800;");
+      }
+
+      // vbox.setStyle(String.format("-fx-background-color: #%s;", pause ? "800000" : "008800"));
 
    }
 
