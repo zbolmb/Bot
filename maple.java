@@ -80,7 +80,7 @@ public class maple extends Application {
    }
 
    private static VBox vbox;
-   private static HBox hbox;
+   private static HBox tmpbox;
    private static Button btn;
    private static ArrayList<CheckBox> toggles = new ArrayList<>();
    @Override
@@ -120,7 +120,6 @@ public class maple extends Application {
       BorderPane root = new BorderPane();
       root.getChildren().add(btn);
       vbox = new VBox();
-      HBox tmpbox;
       for (CheckBox buff_checkbox : toggles) {
          tmpbox = new HBox();
          tmpbox.getChildren().add(buff_checkbox);
@@ -271,7 +270,7 @@ public class maple extends Application {
       }
 
       for (int y = 0; y < SPELLS.length; y++) {
-         if (toggles.get(BUFFS.length + y).isSelected() && timeSince(SPELLS[y].lastUsed) / 1000 > SPELLS[y].freq) {
+         if (toggles.get(BUFFS.length + y).isSelected() && (SPELLS[y].freq == 0 || timeSince(SPELLS[y].lastUsed) / 1000 > SPELLS[y].freq)) {
             SPELLS[y].lastUsed = now();
             robot.keyPress(SPELLS[y].key);
             robot.keyRelease(SPELLS[y].key);
