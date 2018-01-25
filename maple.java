@@ -291,6 +291,7 @@ public class maple extends Application {
 
       if (leech & timeSince(leech_timer) > 5000) {
       	robot.keyPress(SHIKIGAMI_HAUNTING_KEY);
+      	leech_timer = now();
       }
 
       // Teleport
