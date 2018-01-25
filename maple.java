@@ -34,7 +34,8 @@ public class maple extends Application {
 	*/
 
    private static final int TELEPORT_KEY = KeyEvent.VK_E;
-   private static final int DEMON_FURY_KEY = KeyEvent.VK_W;
+   private static final int SHIKIGAMI_HAUNTING_KEY = KeyEvent.VK_A;
+   private static final int HAKU_KEY = KeyEvent.VK_F2;
    // Buffs are of form: name (just for printing), time between casts (in seconds), and key
    private static Buff[] BUFFS = {
       // Kishin lasts for 150 seconds and is the most important for rebuffs.
@@ -72,6 +73,7 @@ public class maple extends Application {
       // This hold robot is used to press and hold keys. This will be used for buffing.
       holdRobot = new Robot();
       buff = now();
+      leech_timer = now();
       start = now();
       lastPrint = now();
       lastBuffed = new long[BUFFS.length];
@@ -83,6 +85,7 @@ public class maple extends Application {
    }
    private static VBox vbox;
    private static Button btn;
+   private static Button leech_btn;
 
    @Override
     public void start(Stage primaryStage) {
@@ -101,8 +104,20 @@ public class maple extends Application {
             }
          });
 
+      leech_btn = new Button();
+      leech_btn.setText("Leech");
+      leech_btn.setOnAction(
+         new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+               leech = !leech;
+            }
+         });
+
+
       BorderPane root = new BorderPane();
       root.getChildren().add(btn);
+      root.getChildren().add(leech_btn);
       vbox = new VBox();
       for (int x = 0; x < BUFFS.length; x++) {
          vbox.getChildren().add(new TextFlow(new Text()));
@@ -110,6 +125,7 @@ public class maple extends Application {
       vbox.getChildren().add(new TextFlow(new Text()));
       vbox.getChildren().add(new TextFlow(new Text()));
       vbox.getChildren().add(btn);
+      vbox.getChildren().add(leech_btn);
 
          new AnimationTimer() {
             @Override
@@ -150,10 +166,12 @@ public class maple extends Application {
    private static Robot robot, holdRobot;
 
    private static boolean pause = false;
+   private static boolean leech = false;
    // Time to hold down a button in ms
    private static final int BUTTON_HOLD = 1000;
 
    private static long buff;
+   private static long leech_timer;
    private static long start;
    private static long lastPrint;
    private static long[] lastBuffed;
@@ -236,6 +254,10 @@ public class maple extends Application {
       Button button = (Button) vbox.getChildren().get(BUFFS.length + 2);
 
       button.setText(pause ? "Unpause" : "Pause");
+
+      Button leech_button = (Button) vbox.getChildren().get(BUFFS.length + 3);
+      leech_button.setText(leech ? "Start Leech" : "Stop Leech");
+
       vbox.setStyle(String.format("-fx-background-color: #%s;", pause ? "800000" : "008800"));
 
    }
@@ -258,9 +280,16 @@ public class maple extends Application {
             }
          }
       }
+
+      if (leech & timeSince(leech_timer) > 5000) {
+      	robot.keyPress(SHIKIGAMI_HAUNTING_KEY);
+      }
+
       // Teleport
-      robot.keyPress(TELEPORT_KEY);
-      robot.keyRelease(TELEPORT_KEY);
+      if (!leech) {
+      	robot.keyPress(TELEPORT_KEY);
+      	robot.keyRelease(TELEPORT_KEY);
+      }
       // robot.keyPress(DEMON_FURY_KEY);
       // robot.keyRelease(DEMON_FURY_KEY);
    }
