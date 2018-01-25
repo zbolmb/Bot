@@ -6,16 +6,18 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.collections.*;
 import javafx.scene.*;
 import javafx.scene.text.*;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import java.io.*;
 import java.util.*;
 import javafx.stage.Screen;
 import javafx.geometry.Rectangle2D;
-
 /**
  * Update the variables directly below as you need to.
  * Run the program to start running. To pause, you can either press the pause button, or just press space.
@@ -29,42 +31,35 @@ import javafx.geometry.Rectangle2D;
  */
 public class maple extends Application {
 
-   /**
-    * This you might want to change
-	*/
-
-   private static final int TELEPORT_KEY = KeyEvent.VK_E;
-   private static final int SHIKIGAMI_HAUNTING_KEY = KeyEvent.VK_A;
-   private static final int HAKU_KEY = KeyEvent.VK_F2;
-   // Buffs are of form: name (just for printing), time between casts (in seconds), and key
-   private static Buff[] BUFFS = {
+   // Spells have format, (name, duration, frequency, key, selected).
+   // For Buffs, set frequency = 0
+   // For Spells, like teleport, set duration to 0
+   // Set selected to true if you want it to be checked on default
+   private static Spell[] BUFFS = {
       // Kishin lasts for 150 seconds and is the most important for rebuffs.
-      new Buff("Kishin", 60, KeyEvent.VK_F1),
+      new Spell("Kishin", 60, 0, KeyEvent.VK_F1, true),
       // Domain has a 220s CD, but is very very important and does NOT spend mana
       // for failed attempts. So, try more often than is necessary.
-      // new Buff("Domain", 40, KeyEvent.VK_F5),
+      new Spell("Domain", 40, 0, KeyEvent.VK_F5, false),
       // Booster lasts for 240 seconds, so as long as there are no consecutive failures,
       // booster should always be active.
-      // new Buff("Booster", 100, KeyEvent.VK_F3),
+      new Spell("Booster", 100, 0, KeyEvent.VK_F3, false),
       // Yuki has a 90s CD, but it also does not spend mana for failed attempts.
-      // new Buff("Yuki", 30, KeyEvent.VK_F4),
+      new Spell("Yuki", 30, 0, KeyEvent.VK_F4, false),
       // Sengoku Forces
-      // new Buff("Sengoku", 30, KeyEvent.VK_F6),
+      new Spell("Sengoku", 30, 0, KeyEvent.VK_F6, false),
       // Haku has a 900s duration, but missing haku for 5 minutes could be deadly, so
       // try a bit more frequently.
-      new Buff("Haku", 300, KeyEvent.VK_F2)
+      new Spell("Haku", 300, 0, KeyEvent.VK_F2, true)
+   };
+   private static Spell[] SPELLS = {
+      new Spell("Teleport", 0, 0, KeyEvent.VK_E, true),
+      new Spell("Shikigami Haunting", 0, 5, KeyEvent.VK_Q, false)
    };
    // How long the bot runs before pausing. This is in case you AFK for too long.
    private static final int RUNTIME_MINUTES = 20;
    // Self-imposed cooldown between buffs. Gives time for mana regen
    private static final int BUFF_CD_SECONDS = 5;
-
-
-
-
-   /**
-    * FX GUI Block
-    */
 
    public static void main(String[] args) throws Exception {
       // This is the robot for teleporting: it includes a delay.
@@ -73,23 +68,41 @@ public class maple extends Application {
       // This hold robot is used to press and hold keys. This will be used for buffing.
       holdRobot = new Robot();
       buff = now();
-      leech_timer = now();
       start = now();
       lastPrint = now();
       lastBuffed = new long[BUFFS.length];
+      lastUsed = new long[SPELLS.length];
       PrintStream out = new PrintStream(new File("switch.vbs"));
       out.println("set WshShell = WScript.CreateObject(\"Wscript.Shell\")");
       out.println("WshShell.AppActivate \"MapleStory\"");
       out.close();
       launch(args);
    }
-   private static VBox vbox;
-   private static Button btn;
-   private static Button leech_btn;
 
+   private static VBox vbox;
+   private static HBox hbox;
+   private static Button btn;
+   private static ArrayList<CheckBox> toggles = new ArrayList<>();
    @Override
-    public void start(Stage primaryStage) {
+   public void start(Stage primaryStage) {
+
       primaryStage.setTitle("Maple?");
+      CheckBox chk;
+
+      for (int i = 0; i < BUFFS.length; i++) {
+      //Create new checkbox and add to toggles
+         chk = new CheckBox(BUFFS[i].name + " : " + KeyEvent.getKeyText(BUFFS[i].key));
+         chk.setSelected(BUFFS[i].selected);
+         toggles.add(chk);
+      }
+
+      for (int i = 0; i < SPELLS.length; i++) {
+      //Create new checkbox and add to toggles
+         chk = new CheckBox(SPELLS[i].name + " : " + KeyEvent.getKeyText(SPELLS[i].key));
+         chk.setSelected(SPELLS[i].selected);
+         toggles.add(chk);
+      }
+
       btn = new Button();
       btn.setText("Pause");
       btn.setOnAction(
@@ -104,54 +117,44 @@ public class maple extends Application {
             }
          });
 
-      leech_btn = new Button();
-      leech_btn.setText("Start Leech");
-      leech_btn.setOnAction(
-         new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-               leech = !leech;
-            }
-         });
-
-
       BorderPane root = new BorderPane();
       root.getChildren().add(btn);
-      root.getChildren().add(leech_btn);
       vbox = new VBox();
-      for (int x = 0; x < BUFFS.length; x++) {
-         vbox.getChildren().add(new TextFlow(new Text()));
+      HBox tmpbox;
+      for (CheckBox buff_checkbox : toggles) {
+         tmpbox = new HBox();
+         tmpbox.getChildren().add(buff_checkbox);
+         tmpbox.getChildren().add(new Text());
+         vbox.getChildren().add(tmpbox);
       }
       vbox.getChildren().add(new TextFlow(new Text()));
-      vbox.getChildren().add(new TextFlow(new Text()));
       vbox.getChildren().add(btn);
-      vbox.getChildren().add(leech_btn);
 
-         new AnimationTimer() {
-            @Override
-            public void handle(long now) {
-               oneLoop();
-            }
-         }.start();
-         new AnimationTimer() {
-            @Override
-            public void handle(long now) {
-               updateGui();
-            }
-         }.start();
+      new AnimationTimer() {
+         @Override
+         public void handle(long now) {
+            oneLoop();
+         }
+      }.start();
+      new AnimationTimer() {
+         @Override
+         public void handle(long now) {
+            updateGui();
+         }
+      }.start();
 
-	  Scene scene = new Scene(vbox, 450, 250);
-	  scene.setOnKeyPressed(new EventHandler<javafx.scene.input.KeyEvent>() {
-	  	@Override
-		public void handle(javafx.scene.input.KeyEvent event) {
-			if (event.getCode() == javafx.scene.input.KeyCode.SPACE) {
-				pause = !pause;
-				if (!pause) {
-					switchToMaplestory();
-				}
-			}
-		}
-	  });
+      Scene scene = new Scene(vbox, 450, 250);
+      scene.setOnKeyPressed(new EventHandler<javafx.scene.input.KeyEvent>() {
+         @Override
+         public void handle(javafx.scene.input.KeyEvent event) {
+            if (event.getCode() == javafx.scene.input.KeyCode.SPACE) {
+               pause = !pause;
+               if (!pause) {
+                  switchToMaplestory();
+               }
+            }
+         }
+      });
       primaryStage.setScene(scene);
       primaryStage.show();
       Rectangle2D primScreenBounds = Screen.getPrimary().getVisualBounds();
@@ -166,26 +169,31 @@ public class maple extends Application {
    private static Robot robot, holdRobot;
 
    private static boolean pause = false;
-   private static boolean leech = false;
    // Time to hold down a button in ms
    private static final int BUTTON_HOLD = 1000;
 
    private static long buff;
-   private static long leech_timer;
    private static long start;
    private static long lastPrint;
    private static long[] lastBuffed;
+   private static long[] lastUsed;
 
 
-   private static class Buff {
+   private static class Spell {
       public final String name;
-      // Buff duration in seconds
+      // Buff duration and frequency in seconds
       public final int duration;
+      public final int freq;
       public final int key;
-      public Buff(String name, int duration, int key) {
+      public long lastUsed;
+      public boolean selected;
+      public Spell(String name, int duration, int freq, int key, boolean selected) {
          this.name = name;
          this.duration = duration;
+         this.freq = freq;
          this.key = key;
+         this.lastUsed = 0;
+         this.selected = selected;
       }
    }
 
@@ -216,57 +224,30 @@ public class maple extends Application {
 
    private static void updateGui() {
       ObservableList<Node> children = vbox.getChildren();
-      for (int x = 0; x < BUFFS.length; x++) {
-         TextFlow textFlow = (TextFlow) children.get(x);
-         textFlow.setStyle(String.format("-fx-background-color: #C0C0C0;"));
-         Text text =(Text) textFlow.getChildren().get(0);
-         long timeToNext = BUFFS[x].duration - timeSince(lastBuffed[x]) / 1000;
-         if (lastBuffed[x] == 0) {
-            text.setText(String.format(
-               "%s has not yet been cast. Will be cast as soon as possible.",
-               BUFFS[x].name));
-         }
-         else if (timeToNext > 0) {
-            text.setText(String.format(
-               "%s was last cast %d seconds ago and will be cast again in %d seconds.",
-               BUFFS[x].name,
-               timeSince(lastBuffed[x]) / 1000,
-               timeToNext));
-         }
-         else {
-            text.setText(String.format("%s was last cast %d seconds ago and will be cast again as soon as possible.",
-               BUFFS[x].name,
-               timeSince(lastBuffed[x]) / 1000));
+      HBox tmp;
+      for (int i = 0; i < BUFFS.length; i++) {
+         tmp = (HBox) children.get(i);
+         // tmp.setPadding(new Insets(10, 50, 50, 50));
+         tmp.setSpacing(10);
+         Text text = (Text) tmp.getChildren().get(1);
+         long timeToNext = BUFFS[i].duration - timeSince(BUFFS[i].lastUsed) / 1000;
+         if (timeToNext > 0) {
+            text.setText(String.format("Buffing in %d seconds.", timeToNext));
+         } else {
+            text.setText("Buffing as soon as possible");
          }
       }
-      String buffCdString =
-         timeSince(buff) < BUFF_CD_SECONDS * 1000
-            ? String.format("%d seconds remaining on buff CD", (BUFF_CD_SECONDS * 1000 - timeSince(buff)) / 1000)
-            : "Next buff will be cast immediately.";
-      ((Text) ((TextFlow) children.get(BUFFS.length)).getChildren().get(0)).setText(buffCdString);
-      ((TextFlow) children.get(BUFFS.length)).setStyle(String.format("-fx-background-color: #C0C0C0;"));
-      ((TextFlow) children.get(BUFFS.length + 1)).setStyle(String.format("-fx-background-color: #C0C0C0;"));
-      ((Text) ((TextFlow) children.get(BUFFS.length + 1)).getChildren().get(0))
+      ((TextFlow) children.get(toggles.size())).setStyle(String.format("-fx-background-color: #C0C0C0;"));
+      ((Text) ((TextFlow) children.get(toggles.size())).getChildren().get(0))
          .setText(
-         	!pause
-         		? String.format("Has been running for %d minutes %d seconds. Will terminate at %d minutes", timeSince(start)/1000/60, timeSince(start)/1000%60, RUNTIME_MINUTES)
-         		: String.format("Program is paused, but will run for %d minutes upon restart", RUNTIME_MINUTES));
-      Button button = (Button) vbox.getChildren().get(BUFFS.length + 2);
+            !pause
+               ? String.format("Has been running for %d minutes %d seconds. Will terminate at %d minutes", timeSince(start)/1000/60, timeSince(start)/1000%60, RUNTIME_MINUTES)
+               : String.format("Program is paused, but will run for %d minutes upon restart", RUNTIME_MINUTES));
+
+      Button button = (Button) vbox.getChildren().get(toggles.size() + 1);
 
       button.setText(pause ? "Unpause" : "Pause");
-
-      Button leech_button = (Button) vbox.getChildren().get(BUFFS.length + 3);
-      leech_button.setText(leech ? "Stop Leech" : "Start Leech");
-
-      if (pause) {
-      	vbox.setStyle("-fx-background-color: #800000;");
-      } else if (leech) {
-      	vbox.setStyle("-fx-background-color: #FFFF00;");
-      } else {
-      	vbox.setStyle("-fx-background-color: #008800;");
-      }
-
-      // vbox.setStyle(String.format("-fx-background-color: #%s;", pause ? "800000" : "008800"));
+      vbox.setStyle(String.format("-fx-background-color: #%s;", pause ? "800000" : "008800"));
 
    }
 
@@ -280,68 +261,21 @@ public class maple extends Application {
          // Check if any buffs need to be refreshed.
          // Since buffs can fail due to lag, buff more frequently than needed
          for (int x = 0; x < BUFFS.length; x++) {
-            if (timeSince(lastBuffed[x]) / 1000 > BUFFS[x].duration) {
+            if (toggles.get(x).isSelected() && timeSince(BUFFS[x].lastUsed) / 1000 > BUFFS[x].duration) {
                buff = now();
-               lastBuffed[x] = buff;
+               BUFFS[x].lastUsed = buff;
                pressButton(BUFFS[x].key);
                break;
             }
          }
       }
 
-      if (leech & timeSince(leech_timer) > 5000) {
-      	robot.keyPress(SHIKIGAMI_HAUNTING_KEY);
-      	leech_timer = now();
+      for (int y = 0; y < SPELLS.length; y++) {
+         if (toggles.get(BUFFS.length + y).isSelected() && timeSince(SPELLS[y].lastUsed) / 1000 > SPELLS[y].freq) {
+            SPELLS[y].lastUsed = now();
+            robot.keyPress(SPELLS[y].key);
+            robot.keyRelease(SPELLS[y].key);
+         }
       }
-
-      // Teleport
-      if (!leech) {
-      	robot.keyPress(TELEPORT_KEY);
-      	robot.keyRelease(TELEPORT_KEY);
-      }
-      // robot.keyPress(DEMON_FURY_KEY);
-      // robot.keyRelease(DEMON_FURY_KEY);
    }
-
-   private static void goToMiddle() {
-      holdRobot.keyPress(KeyEvent.VK_RIGHT);
-      for (int x = 0; x < 12; x++) {
-         holdRobot.keyPress(TELEPORT_KEY);
-         try {
-            Thread.sleep(250);
-         }
-         catch (Exception e){}
-         holdRobot.keyRelease(TELEPORT_KEY);
-      }
-      holdRobot.keyRelease(KeyEvent.VK_RIGHT);
-      try {
-         Thread.sleep(500);
-      }
-      catch (Exception e){}
-      holdRobot.keyPress(KeyEvent.VK_DOWN);
-      for (int x = 0; x < 6; x++) {
-         holdRobot.keyPress(TELEPORT_KEY);
-         try {
-            Thread.sleep(250);
-         }
-         catch (Exception e){}
-         holdRobot.keyRelease(TELEPORT_KEY);
-      }
-      holdRobot.keyRelease(KeyEvent.VK_DOWN);
-      try {
-         Thread.sleep(500);
-      }
-      catch (Exception e){}
-      holdRobot.keyPress(KeyEvent.VK_LEFT);
-      for (int x = 0; x < 2; x++) {
-         holdRobot.keyPress(TELEPORT_KEY);
-         try {
-            Thread.sleep(250);
-         }
-         catch (Exception e){}
-         holdRobot.keyRelease(TELEPORT_KEY);
-      }
-      holdRobot.keyRelease(KeyEvent.VK_LEFT);
-   }
-
 }
