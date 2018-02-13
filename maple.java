@@ -764,6 +764,9 @@ import javax.imageio.ImageIO;
   		System.out.println("retaking screenshot for maplestory");
   		pause(500);
   		mapleLoc = getLoc(fullScreenshot(), mapleIcon);
+  		if (mapleLoc == null) {
+  			System.out.println("Still cannot find maple icon, might need to retake screenshot of maplewindow icon");
+  		}
   	}
     return screenshot(mapleLoc.a, mapleLoc.b + mapleIcon.getHeight() + 3, WIDTH, HEIGHT);
   }
