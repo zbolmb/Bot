@@ -114,10 +114,15 @@ import javax.imageio.ImageIO;
   	lastPrint = now();
   	lastBuffed = new long[BUFFS.length];
   	lastUsed = new long[SPELLS.length];
-  	mapleLoc = getLoc(fullScreenshot(), mapleIcon);
   	PrintStream out = new PrintStream(new File("switch.vbs"));
   	out.println("set WshShell = WScript.CreateObject(\"Wscript.Shell\")");
   	out.println("WshShell.AppActivate \"MapleStory\"");
+  	mapleLoc = getLoc(fullScreenshot(), mapleIcon);
+  	if (mapleLoc == null) {
+  		System.out.println("Cannot find Maplestory window, will try again");
+  	} else {
+  		System.out.println("Maplestory window found!");
+  	}
   	out.close();
 
   	launch(args);
@@ -147,7 +152,7 @@ import javax.imageio.ImageIO;
   	}
 
   	chk = new CheckBox("Teleport : " + KeyEvent.getKeyText(TELEPORT_KEY));
-  	chk.setSelected(true);
+  	// chk.setSelected(true);
   	toggles.add(chk);
     chk = new CheckBox("Leech (No autosuicide)");
     chk.setSelected(true);
@@ -312,10 +317,12 @@ import javax.imageio.ImageIO;
   		pause = true;
   		return;
   	}
-  	if (timeSince(lastExp) > 2000) {
+  	Boolean is_leeching = toggles.get(BUFFS.length + SPELLS.length + 1).isSelected();
+  	if (!is_leeching && timeSince(lastExp) > 2000) {
   		lastExp = now();
   		curExp = getExp();
-  		if (!toggles.get(BUFFS.length + SPELLS.length + 1).isSelected() && curExp > 0.0) {
+  		if (curExp > 0.6) {
+  		// if (true) {
   			pause = true;
   			resetExp();
   		}
@@ -565,6 +572,8 @@ import javax.imageio.ImageIO;
   	hyperTeleport(mesoSpot, "meso spot");
     // Wait for screen to load
   	doUntilImageIsFound(() -> pause(100), portalLocation);
+  	// Close inventory
+  	pressButton(KeyEvent.VK_I);
     // Enter the portal in the middle of the stage.
   	doUntilCondition(maple::moveToAndEnterByeBye, () -> getLoc(mapleScreenshot(), onFantasyThemePark) == null);
   	System.out.println("Inside byebye");
@@ -751,7 +760,12 @@ import javax.imageio.ImageIO;
   }
 
   private static BufferedImage mapleScreenshot() {
-  	return screenshot(mapleLoc.a, mapleLoc.b + mapleIcon.getHeight() + 3, WIDTH, HEIGHT);
+  	while (mapleLoc == null) {
+  		System.out.println("retaking screenshot for maplestory");
+  		pause(500);
+  		mapleLoc = getLoc(fullScreenshot(), mapleIcon);
+  	}
+    return screenshot(mapleLoc.a, mapleLoc.b + mapleIcon.getHeight() + 3, WIDTH, HEIGHT);
   }
 
   private static BufferedImage fullScreenshot() {
