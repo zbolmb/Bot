@@ -400,6 +400,7 @@ import javax.imageio.ImageIO;
   	waitForLoad();
     // TODO: just for loop over initial XP. note that xp is wrong atm
   	while (getExp() > 0) {
+  	// while (true) {
   		kms();
   		System.out.println("Shorter waiting for load");
   		doUntilImageIsFound(() -> pause(200), cashShopIcon);
