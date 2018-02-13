@@ -72,19 +72,19 @@ import javax.imageio.ImageIO;
   	new Spell("Kishin", 60, 0, KeyEvent.VK_F1, true),
       // Domain has a 220s CD, but is very very important and does NOT spend mana
       // for failed attempts. So, try more often than is necessary.
-  	new Spell("Domain", 40, 0, KeyEvent.VK_F5, false),
+  	new Spell("Domain", 40, 0, KeyEvent.VK_2, false),
       // Booster lasts for 240 seconds, so as long as there are no consecutive failures,
       // booster should always be active.
   	new Spell("Booster", 100, 0, KeyEvent.VK_F3, false),
       // Yuki has a 90s CD, but it also does not spend mana for failed attempts.
-  	new Spell("Yuki", 30, 0, KeyEvent.VK_F4, false),
+  	new Spell("Yuki", 30, 0, KeyEvent.VK_1, false),
       // Sengoku Forces
-  	new Spell("Sengoku", 30, 0, KeyEvent.VK_F6, false),
+  	new Spell("Sengoku", 30, 0, KeyEvent.VK_3, false),
       // Haku has a 900s duration, but missing haku for 5 minutes could be deadly, so
       // try a bit more frequently.
   	new Spell("Haku", 300, 0, KeyEvent.VK_F2, true),
     new Spell("Decent HS", 100, 0, KeyEvent.VK_F4, false),
-    new Spell("Blossom Barrier", 90, 0, KeyEvent.VK_F, false)
+    new Spell("Blossom Barrier", 90, 0, KeyEvent.VK_5, false)
   };
   private static Spell[] SPELLS = {
       // new Spell("Teleport", 0, 0, KeyEvent.VK_E, true),
@@ -93,6 +93,7 @@ import javax.imageio.ImageIO;
   };
   // How long the bot runs before pausing. This is in case you AFK for too long.
   private static final int RUNTIME_MINUTES = 20;
+  private static final int RUNTIME_MINUTES_LEECH = 60;
   // Self-imposed cooldown between buffs. Gives time for mana regen
   private static final int BUFF_CD_SECONDS = 5;
 
@@ -283,6 +284,8 @@ import javax.imageio.ImageIO;
 
   private static void updateGui() {
   	ObservableList<Node> children = vbox.getChildren();
+  	Boolean is_leeching = toggles.get(BUFFS.length + SPELLS.length + 1).isSelected();
+  	int runtime = is_leeching ? RUNTIME_MINUTES_LEECH : RUNTIME_MINUTES;
   	HBox tmp;
   	for (int i = 0; i < BUFFS.length; i++) {
   		tmp = (HBox) children.get(i);
@@ -298,8 +301,8 @@ import javax.imageio.ImageIO;
   	((Text) ((TextFlow) children.get(toggles.size())).getChildren().get(0))
   	.setText(
   		!pause
-  		? String.format("Has been running for %d minutes %d seconds. Will terminate at %d minutes", timeSince(start)/1000/60, timeSince(start)/1000%60, RUNTIME_MINUTES)
-  		: String.format("Program is paused, but will run for %d minutes upon restart", RUNTIME_MINUTES));
+  		? String.format("Has been running for %d minutes %d seconds. Will terminate at %d minutes", timeSince(start)/1000/60, timeSince(start)/1000%60, runtime)
+  		: String.format("Program is paused, but will run for %d minutes upon restart", runtime));
 
   	((TextFlow) children.get(toggles.size() + 1)).setStyle(String.format("-fx-background-color: #C0C0C0;"));
   	((Text) ((TextFlow) children.get(toggles.size() + 1)).getChildren().get(0)).setText("Current exp: " + (curExp * 100));
@@ -313,11 +316,12 @@ import javax.imageio.ImageIO;
   private static double curExp = 0;
 
   private static void oneLoop() {
-  	if (timeSince(start) > RUNTIME_MINUTES * 60 * 1000 || pause) {
+  	Boolean is_leeching = toggles.get(BUFFS.length + SPELLS.length + 1).isSelected();
+ 	int runtime = is_leeching ? RUNTIME_MINUTES_LEECH : RUNTIME_MINUTES;
+  	if (timeSince(start) > runtime * 60 * 1000 || pause) {
   		pause = true;
   		return;
   	}
-  	Boolean is_leeching = toggles.get(BUFFS.length + SPELLS.length + 1).isSelected();
   	if (!is_leeching && timeSince(lastExp) > 2000) {
   		lastExp = now();
   		curExp = getExp();
@@ -371,9 +375,13 @@ import javax.imageio.ImageIO;
 //    clickIfValid(new Pair(20, height + mapleIcon.getHeight() + 3), 1);
   	for (int x = 0; x < WIDTH; x++) {
   		int pixel = screen.getRGB(x, height);
-  		int max = Math.max(Math.max(getRed(pixel), getGreen(pixel)), getBlue(pixel));
-  		int min = Math.min(Math.min(getRed(pixel), getGreen(pixel)), getBlue(pixel));
-  		if (getGreen(pixel) == max && max - min > 50 && getBlue(pixel) < 30 && getGreen(pixel) > 150) {
+  		int r = getRed(pixel);
+  		int g = getGreen(pixel);
+  		int b = getBlue(pixel);
+  		int max = Math.max(Math.max(r, g), b);
+  		int min = Math.min(Math.min(r, g), b);
+  		Boolean white = r == 255 && g == 255 && b ==255;
+  		if (white || getGreen(pixel) == max && max - min > 50 && getBlue(pixel) < 30 && getGreen(pixel) > 150) {
   			counter++;
 //        System.out.println(x + " " + getRed(pixel) + " " + getGreen(pixel) + " " + getBlue(pixel));
   		}
