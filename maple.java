@@ -153,7 +153,7 @@ import javax.imageio.ImageIO;
   	}
 
   	chk = new CheckBox("Teleport : " + KeyEvent.getKeyText(TELEPORT_KEY));
-  	// chk.setSelected(true);
+  	chk.setSelected(true);
   	toggles.add(chk);
     chk = new CheckBox("Leech (No autosuicide)");
     chk.setSelected(true);
@@ -363,6 +363,8 @@ import javax.imageio.ImageIO;
 
   private static final int WIDTH = 1024;
   private static final int HEIGHT = 768;
+  // private static final int WIDTH = 800;
+  // private static final int HEIGHT = 600;
   private static Robot screenRobot;
 
   // TODO: get more accurate xp by finding like last occurrence? or smth
@@ -577,7 +579,7 @@ import javax.imageio.ImageIO;
 //    doUntilCondition(
 //        () -> pressButton(BUFFS[2].key), () -> getLoc(mapleScreenshot(), notFullHealth) == null);
     // TODO: check that health has been restored instead of just waiting for a second
-  	pause(1000);
+  	pause(3000);
   	hyperTeleport(mesoSpot, "meso spot");
     // Wait for screen to load
   	doUntilImageIsFound(() -> pause(100), portalLocation);
@@ -590,6 +592,13 @@ import javax.imageio.ImageIO;
 
   private static Pair mapleLoc = null;
   private static void moveToAndEnterByeBye() {
+  	// tp right once
+ //  	holdRobot.keyPress(KeyEvent.VK_RIGHT);
+	// holdRobot.keyPress(TELEPORT_KEY);
+	// pause(150);
+	// holdRobot.keyRelease(TELEPORT_KEY);
+	// holdRobot.keyRelease(KeyEvent.VK_RIGHT);
+	// pause(500);
   	BufferedImage screen = mapleScreenshot();
     // We are looking at the position of our character relative to the center portal
   	Pair relativeLoc = getLoc(screen, portalLocation);
