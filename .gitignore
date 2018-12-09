@@ -36,7 +36,6 @@
 ehthumbs.db
 Thumbs.db
 
-# Screenshots #
-###############
-.png
-/indicators
+# IntelliJ #
+############
+.idea/
